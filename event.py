@@ -26,7 +26,7 @@ class event:
                     self.match_list.append(match)
             for match in self.match_list:
                 for alliance in self.alliances:
-                    if alliance['team1'] == match['alliances']['red']:
+                    if alliance.team1 in match['alliances']['team_keys'] or alliance.team1 in match['alliances']['surrogate_team_keys']:
                         alliance.init_match(match)
         
         init_matches()
