@@ -1,5 +1,7 @@
 import requests
 import string
+import matplotlib.pyplot as plot
+import itertools
 from alliance import alliance
 
 auth_TBA = {'X-TBA-Auth-Key' : '319O7fm4AYptga0ktUY6oIW4uLfUqatprLsxyyFkymObLkYbo7u4lSi8jJ9UJT3f'}
@@ -14,6 +16,7 @@ class event:
         self.event_code = event_code
         self.alliances = []
         self.match_list = []
+        self.event_score = 0
 
         # initializing alliances and bracket type
         for alliance_num in range(8):
@@ -35,19 +38,31 @@ class event:
                         alliance.init_match(match, 'blue')
             for alliance in self.alliances:
                     alliance.sort_matches()
-        
-        init_matches(self)
+            
+        # init_matches(self)
 
-        # define function to calculate final event rankings.
-        self.rankings = [1, 2, 3, 4, 5, 6, 7, 8]
-        def calculate_rankings(self):
-            for alliance in self.alliances:
-                for compare_alliance in self.alliances:
-                    if alliance == compare_alliance:
-                        continue
+    # define function to calculate final event rankings.
+    def calculate_event_score(self):
+        for alliance in self.alliances:
+            self.event_score += abs(alliance.seed_num - alliance.final_ranking)
+
+    # creating distribution of scores
+    # need to make it so that the '0' distribution is more common, reflecting real life
+    def draw_distribution(self):
+        plot_data = []
+        for arrangement in list(itertools.permutations(list(range(1,9)), 8)):
+            arrangement_sum = 0
+            for number in range(len(arrangement)):
+                arrangement_sum += (1 / arrangement[number]) * abs(arrangement[number] - (number + 1))
+            plot_data.append(arrangement_sum)
+        plot.hist(plot_data, bins = 256)
+        plot.show()
+
+                
 
 
 
 cada = event('2024cada')
+cada.draw_distribution()
         
         

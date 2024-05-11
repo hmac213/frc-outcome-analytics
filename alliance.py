@@ -24,10 +24,11 @@ class alliance:
             self.team4 = get_alliances[self.seed_num - 1]['picks'][3]
 
     def init_match(self, match, color):
-            self.matches.append(match)
-            self.match_colors.append(color)
+        self.matches.append(match)
+        self.match_colors.append(color)
 
     # sorting an alliance's matches in chronological order
+    # LOOK INTO MATCH SORTING WITH 'match_number' INSTEAD
     def sort_matches(self):
         sorted_matches = []
         if self.bracket_style == 'old':
