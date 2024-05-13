@@ -27,18 +27,28 @@ class event:
                 self.alliances.append(alliance(event_code, alliance_num + 1, 'new'))
         
         # initializing matches for all alliances
-        def init_matches(self):
-            for match in self.get_event_matches:
-                if match['comp_level'] != 'qm' and match['actual_time'] != None:
-                    self.playoff_matches.append(match)
-            for match in self.playoff_matches:
-                for alliance in self.alliances:
-                    if alliance.team1 in match['alliances']['red']['team_keys'] or alliance.team1 in match['alliances']['red']['surrogate_team_keys']:
-                        alliance.init_match(match, 'red')
-                    elif alliance.team1 in match['alliances']['blue']['team_keys'] or alliance.team1 in match['alliances']['blue']['surrogate_team_keys']:
-                        alliance.init_match(match, 'blue')
+        def calculate_rankings(self):
+            alliance_rankings = [8]
+            alliances_tied_eighth = []
+            alliances_tied_sixth = []
             for alliance in self.alliances:
-                    alliance.sort_matches()
+                get_alliance_matches = requests.get(f'https://www.thebluealliance.com/api/v3/team/frc{alliance.teams[0]}/event/{self.event_code}/matches', params = auth_TBA).json()
+                sorted_alliance_matches = []
+
+                for match in get_alliance_matches:
+                    if match['comp_level'] == 'qm':
+                        get_alliance_matches.remove(match)
+
+                if alliance['status']['status'] == 'won':
+                    alliance_rankings[0] = self.alliances.get(alliance)
+                elif alliance['status']['comp_level'] == 'f':
+                    alliance_rankings[1] = self.alliances.get(alliance)
+
+    
+
+
+                
+
             
         # init_matches(self)
 
@@ -69,9 +79,7 @@ class event:
         return probability_map
                 
     def create_place_probability_distribution(self):
-        initial_matches = 
-
-cada = event('2024cada')
-print(cada.create_probability_distribution())
+        for alliance in self.alliances:
+            average_playoff_score = alliance.calculate_average_playoff_score()
         
         

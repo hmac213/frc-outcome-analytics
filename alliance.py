@@ -101,3 +101,26 @@ class alliance:
         self.matches = sorted_matches
         for match in self.matches:
             print('match sorted for alliance ' + str(self.seed_num) + ': ' + match['key'])
+
+    def calculate_average_playoff_score(self):
+        playoff_matches = requests.get(f'https://www.thebluealliance.com/api/v3/team/frc{self.teams[0]}/event/{self.event_code}/matches/simple', params = auth_TBA).json()
+        average_playoff_score = 0
+
+        updated_playoff_matches = []
+        for match in playoff_matches:
+            if match['comp_level'] != 'qm' and match['alliances']['red']['score'] != -1:
+                updated_playoff_matches.append(match)
+
+        playoff_matches = updated_playoff_matches
+
+        num_playoff_matches = len(playoff_matches)
+
+        for match in playoff_matches:
+            if 'frc' + str(self.teams[0]) in match['alliances']['red']['team_keys']:
+                average_playoff_score += (match['alliances']['red']['score'] / num_playoff_matches)
+                print('adding a score of: ' + str(match['alliances']['red']['score']) + ' in match' + str(match['key']))
+            else:
+                average_playoff_score += (match['alliances']['blue']['score'] / num_playoff_matches)
+                print('adding a score of: ' + str(match['alliances']['blue']['score']) + ' in match' + str(match['key']))
+
+        return average_playoff_score
