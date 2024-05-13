@@ -1,4 +1,3 @@
-from collections import defaultdict
 import requests
 import statbotics
 import string
@@ -40,32 +39,32 @@ class alliance:
             alliance_points_mean += sb.get_team_event(self.teams[pick_num], event = self.event_code, fields = ['epa_pre_playoffs'])['epa_pre_playoffs']
         
         for i in range(3):
-            print('starting next team: ' + str(self.teams[i]))
-            team_average_score = 0
-            match_scores = []
-            match_list = requests.get(f'https://www.thebluealliance.com/api/v3/team/frc{self.teams[i]}/event/{self.event_code}/matches/simple', params = auth_TBA).json()
+            team_average_qual_score = 0
+            qual_match_scores = []
+            # should speed up code by not calling API for every team. Should rather create a match list beforehand and assign to teams based on being in the match.
+            qual_matches = requests.get(f'https://www.thebluealliance.com/api/v3/team/frc{self.teams[i]}/event/{self.event_code}/matches/simple', params = auth_TBA).json()
             
-            updated_match_list = []
-            for match in match_list:
+            updated_qual_matches = []
+            for match in qual_matches:
                 if match['comp_level'] == 'qm':
-                    updated_match_list.append(match)
+                    updated_qual_matches.append(match)
 
-            match_list = updated_match_list
+            qual_matches = updated_qual_matches
 
-            for match in match_list:
+            for match in qual_matches:
                 if 'frc' + str(self.teams[i]) in match['alliances']['red']['team_keys']:
-                    team_average_score += (match['alliances']['red']['score'] / num_qual_matches)
-                    match_scores.append(match['alliances']['red']['score'])
+                    team_average_qual_score += (match['alliances']['red']['score'] / num_qual_matches)
+                    qual_match_scores.append(match['alliances']['red']['score'])
                 else:
-                    team_average_score += (match['alliances']['blue']['score'] / num_qual_matches)
-                    match_scores.append(match['alliances']['blue']['score'])
+                    team_average_qual_score += (match['alliances']['blue']['score'] / num_qual_matches)
+                    qual_match_scores.append(match['alliances']['blue']['score'])
 
-            percent_contribution = sb.get_team_event(self.teams[i], event = self.event_code, fields = ['epa_pre_playoffs'])['epa_pre_playoffs'] / team_average_score
+            percent_contribution = sb.get_team_event(self.teams[i], event = self.event_code, fields = ['epa_pre_playoffs'])['epa_pre_playoffs'] / team_average_qual_score
 
             team_variance = 0
 
             for j in range(num_qual_matches):
-                team_variance += (pow(match_scores[j] - team_average_score, 2) * pow(percent_contribution, 2))
+                team_variance += (pow(qual_match_scores[j] - team_average_qual_score, 2) * pow(percent_contribution, 2))
 
             team_variance = team_variance / (num_qual_matches - 1)
 

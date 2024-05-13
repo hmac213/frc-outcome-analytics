@@ -21,3 +21,4 @@ print(sb.get_team_event(254, '2024cabe', fields = ['epa_pre_playoffs'])['epa_pre
 print(sb.get_team_event(1678, '2024cabe', fields = ['epa_pre_playoffs'])['epa_pre_playoffs'])
 print(sb.get_team_event(1160, '2024cabe', fields = ['epa_pre_playoffs'])['epa_pre_playoffs'])
 print(np.random.standard_t(9))
+print([[0] * 8 for i in range(8)])

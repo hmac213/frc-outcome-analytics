@@ -5,17 +5,15 @@ import numpy as np
 
 sb = statbotics.Statbotics()
 
-def calculate_win_prob (red_alliance: alliance, blue_alliance: alliance):
-    # The win_prob variable calculates the probability of red winning. The probability of blue winning is 1 - win_prob
+def calculate_match_probability(red_alliance: alliance, blue_alliance: alliance):
+    # return the first alliance's win probability
 
-    # get expected match score
+    # get expected match score and standard deviation
 
     red_average, red_standard_deviation, num_qual_matches = red_alliance.calculate_alliance_points_mean_sd()
     blue_average, blue_standard_deviation, num_qual_matches = blue_alliance.calculate_alliance_points_mean_sd()
 
-    # conduct two-sample t-test to calculate probability of winning for red alliance
-
-    # return sp.ttest_ind_from_stats(red_average, red_standard_deviation, num_qual_matches, blue_average, blue_standard_deviation, num_qual_matches, False, 'greater')
+    # simulate 1000 times and return the outcome of the simulation
 
     red_wins = 0
     blue_wins = 0
@@ -29,7 +27,5 @@ def calculate_win_prob (red_alliance: alliance, blue_alliance: alliance):
             blue_wins += 1
 
 
-    return [red_average, red_standard_deviation, blue_average, blue_standard_deviation, red_wins / (red_wins + blue_wins), red_wins, blue_wins]
-
-print(calculate_win_prob(alliance('2024cabe', 1, 'new'), alliance('2024cabe', 2, 'new')))
+    return red_wins / (red_wins + blue_wins)
 
