@@ -43,14 +43,27 @@ class event:
                     alliance_rankings[0] = self.alliances.get(alliance)
                 elif alliance['status']['comp_level'] == 'f':
                     alliance_rankings[1] = self.alliances.get(alliance)
+                elif alliance['status']['record']['wins'] == 1:
+                    alliances_tied_sixth.append(alliance)
+                elif alliance['status']['record']['wins'] == 0:
+                    alliances_tied_eighth.append(alliance)
+                # need to handle third and fourth places
 
-    
+                # determining fifth and sixth
+                if alliances_tied_sixth[0].calculate_average_playoff_score() > alliances_tied_sixth[1].calculate_average_playoff_score():
+                    alliance_rankings[4] = alliances_tied_sixth[0]
+                    alliance_rankings[5] = alliances_tied_sixth[1]
+                else:
+                    alliance_rankings[4] = alliances_tied_sixth[1]
+                    alliance_rankings[5] = alliances_tied_sixth[0]
 
-
-                
-
-            
-        # init_matches(self)
+                # determining seventh and eighth
+                if alliances_tied_eighth[0].calculate_average_playoff_score() > alliances_tied_eighth[1].calculate_average_playoff_score():
+                    alliance_rankings[6] = alliances_tied_eighth[0]
+                    alliance_rankings[7] = alliances_tied_eighth[1]
+                else:
+                    alliance_rankings[6] = alliances_tied_eighth[1]
+                    alliance_rankings[7] = alliances_tied_eighth[0]
 
     # define function to calculate final event rankings.
     def calculate_event_score(self):

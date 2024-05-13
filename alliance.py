@@ -118,9 +118,7 @@ class alliance:
         for match in playoff_matches:
             if 'frc' + str(self.teams[0]) in match['alliances']['red']['team_keys']:
                 average_playoff_score += (match['alliances']['red']['score'] / num_playoff_matches)
-                print('adding a score of: ' + str(match['alliances']['red']['score']) + ' in match' + str(match['key']))
             else:
                 average_playoff_score += (match['alliances']['blue']['score'] / num_playoff_matches)
-                print('adding a score of: ' + str(match['alliances']['blue']['score']) + ' in match' + str(match['key']))
 
         return average_playoff_score
