@@ -51,7 +51,7 @@ However, calculating all possibilities requires intensive computation, so we dev
 
       So, if $c_{X} > \frac{1}{2}$, then $\sum p > 1$, which is impossible.
 
-   3. Check to see if the probability is below a certain value. if it is not, then it must be an upset.
+   3. Find the alliance, $a_{i}$, with seed $i$ whose finishing rank, $f$, differs from its seed the most. In other words, $\left|i - f\right|$ is maximal.
    4. Take the alliance with the most unexpected finishing position, defined by the absolute difference of final ranking and seed, and calculate its spot among other distributions where the alliance is in a more extreme position.
    
    Once we can determine, with certainty, whether an outcome is an upset, no further calculations are needed. Terminating this process while completing as few calculations as possible ensures that the calculation time is minimal.
