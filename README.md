@@ -47,7 +47,7 @@ However, calculating all possibilities requires intensive computation, so we dev
 3. Determine the cumulative place of the probability value. To do so, we first check a few shortcuts and then utilize an iterative approach:
    1. Check to see if the probability is above $\frac{2}{8!}$. If it is, then we know it must not be an upset. A proof is as follows where $c_{p}$ is the cumulative probability of a specific probability $p$ and our observed event is $X$:
   
-      $$p_{X} \geq \frac{2}{8!} \implies p \geq \frac{2}{8!} \forall p \in \\{p \nmid c_{p} > c_{X}\\}.$$
+      $$p_{X} \geq \frac{2}{8!} \implies p \geq \frac{2}{8!} \forall p \in \\{p \mid c_{p} > c_{X}\\}.$$
 
       So, if $c_{X} > \frac{1}{2}$, then $\sum p > 1$, which is impossible.
 
