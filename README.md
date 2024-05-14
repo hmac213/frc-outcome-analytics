@@ -45,8 +45,13 @@ However, calculating all possibilities requires intensive computation, so we dev
 1. Represent the outcome in the form of an array: `final_rankings = [2, 1, 3, 7, 6, 5, 4, 8]`. The values in the array represent the alliance seed, while the indices represent the finishing place. Notice that in FRC playoff brackets, there will be a tie for 7th and 8th place as well as a tie for 5th and 6th place. To settle these ties, we use a secondary comparison of the average match score for each alliance through the playoffs.
 2. Calculate the probability of the given ranking occurring. To do this, we iterate over all matchup possibilities that can lead to the given outcome. Then, based on the summed probabilities of each possibility, we assign the outcome a probability value.
 3. Determine the cumulative place of the probability value. To do so, we first check a few shortcuts and then utilize an iterative approach:
-   1. Check to see if the probability is above a certain value. If it is, then it must be a non-upset.
-   2. Check to see if the probability is below a certain value. if it is not, then it must be an upset.
-   3. Take the alliance with the most unexpected finishing position, defined by the absolute difference of final ranking and seed, and calculate its spot among other distributions where the alliance is in a more extreme position.
+   1. Check to see if the probability is above $\frac{2}{8!}$. If it is, then we know it must not be an upset. A proof is as follows where $c_{p}$ is the cumulative probability of a specific probability $p$ and our observed event is $X$:
+  
+      $$p_{X} \geq \frac{2}{8!} \implies p \geq \frac{2}{8!} \forall p \in \\{p \vert c_{p} > c_{X}\\}.$$
+
+      So, if $c_{X} > \frac{1}{2}$, then $\sum p > 1$, which is impossible.
+
+   3. Check to see if the probability is below a certain value. if it is not, then it must be an upset.
+   4. Take the alliance with the most unexpected finishing position, defined by the absolute difference of final ranking and seed, and calculate its spot among other distributions where the alliance is in a more extreme position.
    
    Once we can determine, with certainty, whether an outcome is an upset, no further calculations are needed. Terminating this process while completing as few calculations as possible ensures that the calculation time is minimal.
