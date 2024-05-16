@@ -88,6 +88,7 @@ class event:
         for i in range(8):
             for j in range(7 - i):
                 probability_map[i][j + i + 1] = calculate_match_probability(self.alliances[i], self.alliances[i + j + 1])
+                probability_map[j + i + 1][i] = 1 - probability_map[i][j + i + 1]
 
         return probability_map
                 
