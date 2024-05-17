@@ -37,57 +37,54 @@ distribution = [[0, 0.547, 0.974, 0.99, 0.981, 1.0, 0.992, 0.994], [0.4529999999
 probabilities = []
 teams = [1, 2, 3, 4, 5, 6, 7, 8]
 
-# Need to create independent probabilities for calculating how likely a team is to get 8th place.
+states = {
+    'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
+    'w2' : [[0, 0], [0, 0]],
+    'w3' : [[0, 0]],
+    'l1' : [[0, 0], [0,0]],
+    'l2' : [[0, 0], [0,0]],
+    'l3' : [[0, 0]],
+    'l4' : [[0, 0]],
+    'f' : [[0,0]],
+    'r1' : 0,
+    'r2' : 0,
+    'r3' : 0,
+    'r4' : 0,
+    'r5' : 0,
+    'r6' : 0,
+    'r7' : 0,
+    'r8' : 0
+}
 
-# P(T = 8) = P(Lose W1) * P(Lose L1) * P(Lose 7,8)
-# P(T = 7) = P(Lose W1) * P(Lose L1) * P(Lose 7,8)
-# P(T = 6) = [P(Win W1) * P(Lose W2) * P(Lose L2) + P(Lose W1) * P(Win L1) * P(Lose L2)] * P(Lose 5,6)
+# create variables to hold the rank ties. Will deal with them seperately
 
-def create_distribution():
-    # for loop to iterate through all
-    for arrangement in list(iteration.permutations(list(range(1,9)), 8)):
-        probability = 1
-        # probability = 1
-        # now we multiply by the certain events where 7 and 8 lose their first two matches and then the average score comparison
-        # probability = probability * distribution[arrangement.get(0)][arrangement.get(7)] * distribution[arrangement.get(1)][arrangement.get(6)] * distribution[arrangement.get(6)][arrangement.get(7)]
-        # now there are two possibilities for 5 and 6. Each can win then lose twice or lose win lose.
-        # In the array below we use [5 win 6 win, 5 win 6 lose, 5 lose 6 win, 5 lose 6 lose]
+seven_eight_tie = [0, 0]
+five_six_tie = [0, 0]
 
-        # In the first case, the probability that 5 and six both win their 
-        # five_six_cp = [1, 1, 1, 1]
-        # five_six_cp[0] = five_six_cp[0] * distribution[arrangement.get(4)][arrangement.get(3)] * distribution[arrangement.get(5)][arrangement.get(2)]
+transition_map = {
+    'w1' : ['w2', 'l1'],
+    'w2' : ['w3', 'l2'],
+    'w3' : ['w4', 'l4'],
+    'l1' : ['l2', seven_eight_tie],
+    'l2' : ['l3', five_six_tie],
+    'l3' : ['l4', 'r4'],
+    'l4' : ['f', 'r3'],
+    'f' : ['r1', 'r2']
+}
 
-        for qf_arrangement in list(iteration.combinations(range(4,8), 2)):
-            if arrangement[qf_arrangement[0]] + arrangement[qf_arrangement[1]] == 7:
-                probability = 0
-                break
+# the 'state' parameter must be of the form states[state][substate], to create universal syntax
+def transition(state, winning_color, substate):
+    if winning_color == 'red':
+        states[transition_map[state][0]] = states[state][substate][0]
+        states[transition_map[state][1]] = states[state][substate][1]
+    elif winning_color == 'blue':
+        states[transition_map[state][0]] = states[state][substate][1]
+        states[transition_map[state][1]] = states[state][substate][0]
 
-        sf_exclusive_upper = [0, 7, 3, 4]
-        sf_exclusive_lower = [1, 6, 2, 5]
+def check_order():
+    order = [states['r1'], states['r2'], states['r3'], states['r4'], states['r5'], states['r6'], states['r7'], states['r8']]
 
-        if (arrangement[2] in sf_exclusive_upper and arrangement[3] in sf_exclusive_upper) or (arrangement[2] in sf_exclusive_lower and arrangement[3] in sf_exclusive_lower):
-            probability = 0
-
-        if probability == 0:
-            continue
+    
 
 
-        qf_winners = []
-        sf_winners = []
-        f_winners = []
-
-        for i in range(4):
-            if arrangement.get(i) < arrangement.get(7 - i):
-                qf_winners.append(i)
-            else:
-                qf_winners.append(7 - i)
-
-        probability = probability * distribution[arrangement.get(0)][arrangement.get(7)] * distribution[arrangement.get(1)][arrangement.get(6)] * distribution[arrangement.get(7)][arrangement.get(5)] * distribution[arrangement.get(3)][arrangement.get(4)]
-
-
-
-
-        # 1, 8; 4, 5; 2, 7; 3, 6
-
-create_distribution()
 print(len(probabilities))
