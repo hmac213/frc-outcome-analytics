@@ -39,13 +39,13 @@ teams = [1, 2, 3, 4, 5, 6, 7, 8]
 
 states = {
     'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
-    'w2' : [[0, 0], [0, 0]],
-    'w3' : [[0, 0]],
-    'l1' : [[0, 0], [0,0]],
-    'l2' : [[0, 0], [0,0]],
-    'l3' : [[0, 0]],
-    'l4' : [[0, 0]],
-    'f' : [[0,0]],
+    'w2' : [[], []],
+    'w3' : [[]],
+    'l1' : [[], []],
+    'l2' : [[], []],
+    'l3' : [[]],
+    'l4' : [[]],
+    'f' : [[]],
     'r1' : 0,
     'r2' : 0,
     'r3' : 0,
@@ -73,18 +73,26 @@ transition_map = {
 }
 
 # the 'state' parameter must be of the form states[state][substate], to create universal syntax
-def transition(state, winning_color, substate):
-    if winning_color == 'red':
+def transition(state, substate, winning_index):
+    if winning_index == 0:
         states[transition_map[state][0]] = states[state][substate][0]
         states[transition_map[state][1]] = states[state][substate][1]
-    elif winning_color == 'blue':
+    elif winning_index == 1:
         states[transition_map[state][0]] = states[state][substate][1]
         states[transition_map[state][1]] = states[state][substate][0]
 
-def check_order():
-    order = [states['r1'], states['r2'], states['r3'], states['r4'], states['r5'], states['r6'], states['r7'], states['r8']]
+orders = []
 
-    
+def simulate_bracket():
+    live_states = states
+    # we sort based on indices.
+    # simulating using binary
+    # if number is 1, then red wins, if number is 0 then blue wins
+    for i in range(16):
+        if i % 2 == 1:
+            transition('w1', 3, 'red')
+        else:
+            transition('w1', 3, 'blue')
 
 
 print(len(probabilities))
