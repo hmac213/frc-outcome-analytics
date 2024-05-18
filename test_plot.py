@@ -37,6 +37,27 @@ distribution = [[0, 0.547, 0.974, 0.99, 0.981, 1.0, 0.992, 0.994], [0.4529999999
 probabilities = []
 teams = [1, 2, 3, 4, 5, 6, 7, 8]
 
+default_states = {
+    'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
+    'w2' : [[], []],
+    'w3' : [[]],
+    'l1' : [[], []],
+    'l2' : [[], []],
+    'l3' : [[]],
+    'l4' : [[]],
+    'f' : [[]],
+    'r1' : [[0]],
+    'r2' : [[0]],
+    'r3' : [[0]],
+    'r4' : [[0]],
+    'r5' : [[0]],
+    'r6' : [[0]],
+    'r7' : [[0]],
+    'r8' : [[0]],
+    'r56' : [[]],
+    'r78' : [[]]
+}
+
 states = {
     'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
     'w2' : [[], []],
@@ -46,53 +67,178 @@ states = {
     'l3' : [[]],
     'l4' : [[]],
     'f' : [[]],
-    'r1' : 0,
-    'r2' : 0,
-    'r3' : 0,
-    'r4' : 0,
-    'r5' : 0,
-    'r6' : 0,
-    'r7' : 0,
-    'r8' : 0
+    'r1' : [[]],
+    'r2' : [[]],
+    'r3' : [[]],
+    'r4' : [[]],
+    'r5' : [[]],
+    'r6' : [[]],
+    'r7' : [[]],
+    'r8' : [[]],
+    'r56' : [[]],
+    'r78' : [[]]
 }
 
-# create variables to hold the rank ties. Will deal with them seperately
+# assigning paths to the alliances
 
-seven_eight_tie = [0, 0]
-five_six_tie = [0, 0]
+path_one = [1, 8, 4, 5]
+path_two = [2, 7, 3, 6]
 
 transition_map = {
     'w1' : ['w2', 'l1'],
     'w2' : ['w3', 'l2'],
-    'w3' : ['w4', 'l4'],
-    'l1' : ['l2', seven_eight_tie],
-    'l2' : ['l3', five_six_tie],
+    'w3' : ['f', 'l4'],
+    'l1' : ['l2', 'r78'],
+    'l2' : ['l3', 'r56'],
     'l3' : ['l4', 'r4'],
     'l4' : ['f', 'r3'],
-    'f' : ['r1', 'r2']
+    'f' : ['r1', 'r2'],
+    'r56' : ['r5', 'r6'],
+    'r78' : ['r7', 'r8']
 }
 
 # the 'state' parameter must be of the form states[state][substate], to create universal syntax
+# path is either 1 or 2. From path 1, you can access certain matches and from path 2 you can access certain matches
 def transition(state, substate, winning_index):
+    if state == 'w1':
+        if substate == 0 or substate == 1:
+            if winning_index == 0:
+                states[transition_map[state][0]][0].append(states[state][substate][0])
+                states[transition_map[state][1]][0].append(states[state][substate][1])
+            elif winning_index == 1:
+                states[transition_map[state][1]][0].append(states[state][substate][0])
+                states[transition_map[state][0]][0].append(states[state][substate][1])
+        elif substate == 2 or substate == 3:
+            if winning_index == 0:
+                states[transition_map[state][0]][1].append(states[state][substate][0])
+                states[transition_map[state][1]][1].append(states[state][substate][1])
+            elif winning_index == 1:
+                states[transition_map[state][1]][1].append(states[state][substate][0])
+                states[transition_map[state][0]][1].append(states[state][substate][1])
+    elif state == 'l1':
+        if winning_index == 0:
+            states[transition_map[state][0]][substate].append(states[state][substate][0])
+            states[transition_map[state][1]][0].append(states[state][substate][1])
+        elif winning_index == 1:
+            states[transition_map[state][1]][0].append(states[state][substate][0])
+            states[transition_map[state][0]][substate].append(states[state][substate][1])
+    elif state == 'w2':
+        if substate == 0:
+            substate_opp = 1
+        elif substate == 1:
+            substate_opp = 0
+        if winning_index == 0:
+            states[transition_map[state][0]][0].append(states[state][substate][0])
+            states[transition_map[state][1]][substate_opp].append(states[state][substate][1])
+        elif winning_index == 1:
+            states[transition_map[state][1]][substate_opp].append(states[state][substate][0])
+            states[transition_map[state][0]][0].append(states[state][substate][1])
+    else:
+        if winning_index == 0:
+            states[transition_map[state][0]][0].append(states[state][substate][0])
+            states[transition_map[state][1]][0].append(states[state][substate][1])
+        elif winning_index == 1:
+            states[transition_map[state][0]][0].append(states[state][substate][1])
+            states[transition_map[state][1]][0].append(states[state][substate][0])
+
+    for i in range(len(states[transition_map[state][0]])):
+        if len(states[transition_map[state][0]][i]) == 2:
+            states[transition_map[state][0]][i].sort()
+
+    for i in range(len(states[transition_map[state][1]])):
+        if len(states[transition_map[state][1]][i]) == 2:
+            states[transition_map[state][1]][i].sort()
+
     if winning_index == 0:
-        states[transition_map[state][0]] = states[state][substate][0]
-        states[transition_map[state][1]] = states[state][substate][1]
-    elif winning_index == 1:
-        states[transition_map[state][0]] = states[state][substate][1]
-        states[transition_map[state][1]] = states[state][substate][0]
+        return distribution[states[state][substate][0]][states[state][substate][1]]
+    else:
+        return distribution[states[state][substate][1]][states[state][substate][0]]
+
+# make sure the indices of these two following lists always align.
 
 orders = []
+probabilities = []
 
-def simulate_bracket():
-    live_states = states
+def simulate_brackets():
     # we sort based on indices.
     # simulating using binary
     # if number is 1, then red wins, if number is 0 then blue wins
-    for i in range(16):
-        if i % 2 == 1:
-            transition('w1', 3, 'red')
+    for w1_index in range(16):
+        bin_w1 = []
+
+        if w1_index < 8:
+            bin_w1.append(0)
         else:
-            transition('w1', 3, 'blue')
+            bin_w1.append(1)
+        
+        transition('w1', 0, bin_w1[0])
+        transition('w1', 1, bin_w1[1])
+        transition('w1', 2, bin_w1[2])
+        transition('w1', 3, bin_w1[3])
+
+        for w2_l1_index in range(16):
+            bin_w2_l1 = []
+
+            transition('w2', 0, bin_w2_l1[0])
+            transition('w2', 1, bin_w2_l1[1])
+            transition('l1', 0, bin_w2_l1[0])
+            transition('l1', 1, bin_w2_l1[1])
+
+            for l2_index in range(4):
+                bin_l2 = []
+
+                transition('l2', 0, bin_l2[0])
+                transition('l2', 1, bin_l2[1])
+
+                for w3_l3_index in range(4):
+                    bin_w3_l3 = []
+
+                    transition('w3', 0, bin_w3_l3[0])
+                    transition('l3', 0, bin_w3_l3[1])
+
+                    for l4_index in range(2):
+                        bin_l4 = []
+
+                        transition('l4', 0, bin_l4[0])
+
+                        for f_index in range(2):
+                            bin_f = []
+
+                            transition('f', 0, bin_l4[0])
+
+                            for r56_index in range(2):
+                                bin_r56 = []
+
+                                transition('r56', 0, bin_r56[0])
+
+                                for r78_index in range(2):
+                                    bin_r78 = []
+
+                                    transition('r78', 0, bin_r78[0])
+
+                                    order = [states['r1'][0], states['r2'][0], states['r3'][0], states['r4'][0], states['r5'][0], states['r6'][0], states['r7'][0], states['r8'][0]]
+
+                                    if order not in orders:
+                                        orders.append(order)
+
+    states = default_states
+        
 
 
-print(len(probabilities))
+transition('w1', 0, 0)
+transition('w1', 1, 1)
+transition('w1', 2, 0)
+transition('w1', 3, 0)
+transition('w2', 0, 0)
+transition('w2', 1, 1)
+transition('w3', 0, 0)
+transition('l1', 0, 0)
+transition('l1', 1, 0)
+transition('l2', 0, 1)
+transition('l2', 1, 1)
+transition('l3', 0, 0)
+transition('l4', 0, 0)
+transition('f', 0, 1)
+transition('r56', 0, 1)
+transition('r78', 0, 0)
+print(bin(7))
