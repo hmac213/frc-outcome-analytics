@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plot
 from event import event
-import itertools as iteration
+import itertools as iterate
 
 # Paths to 8 seed:
 # W1 -> L1 -> 8
@@ -38,7 +38,7 @@ probabilities = []
 teams = [1, 2, 3, 4, 5, 6, 7, 8]
 
 default_states = {
-    'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
+    'w1' : [[1, 8], [3, 5], [2, 7], [3, 6]],
     'w2' : [[], []],
     'w3' : [[]],
     'l1' : [[], []],
@@ -46,14 +46,14 @@ default_states = {
     'l3' : [[]],
     'l4' : [[]],
     'f' : [[]],
-    'r1' : [[0]],
-    'r2' : [[0]],
-    'r3' : [[0]],
-    'r4' : [[0]],
-    'r5' : [[0]],
-    'r6' : [[0]],
-    'r7' : [[0]],
-    'r8' : [[0]],
+    'r1' : [[]],
+    'r2' : [[]],
+    'r3' : [[]],
+    'r4' : [[]],
+    'r5' : [[]],
+    'r6' : [[]],
+    'r7' : [[]],
+    'r8' : [[]],
     'r56' : [[]],
     'r78' : [[]]
 }
@@ -150,95 +150,47 @@ def transition(state, substate, winning_index):
             states[transition_map[state][1]][i].sort()
 
     if winning_index == 0:
-        return distribution[states[state][substate][0]][states[state][substate][1]]
+        return distribution[states[state][substate][0] - 1][states[state][substate][1] - 1]
     else:
-        return distribution[states[state][substate][1]][states[state][substate][0]]
+        return distribution[states[state][substate][1] - 1][states[state][substate][0] - 1]
 
 # make sure the indices of these two following lists always align.
 
-orders = []
-probabilities = []
+probabilities = {}
 
 def simulate_brackets():
     # we sort based on indices.
     # simulating using binary
     # if number is 1, then red wins, if number is 0 then blue wins
-    for w1_index in range(16):
-        bin_w1 = []
 
-        if w1_index < 8:
-            bin_w1.append(0)
+    for arrangement in iterate.product(range(2), repeat = 16):
+        states = default_states
+
+        counting_probability = 1
+        counting_probability = counting_probability * transition('w1', 0, arrangement[0])
+        counting_probability = counting_probability * transition('w1', 1, arrangement[1])
+        counting_probability = counting_probability * transition('w1', 2, arrangement[2])
+        counting_probability = counting_probability * transition('w1', 3, arrangement[3])
+        counting_probability = counting_probability * transition('w2', 0, arrangement[4])
+        counting_probability = counting_probability * transition('w2', 1, arrangement[5])
+        counting_probability = counting_probability * transition('w3', 0, arrangement[6])
+        counting_probability = counting_probability * transition('l1', 0, arrangement[7])
+        counting_probability = counting_probability * transition('l1', 1, arrangement[8])
+        counting_probability = counting_probability * transition('l2', 0, arrangement[9])
+        counting_probability = counting_probability * transition('l2', 1, arrangement[10])
+        counting_probability = counting_probability * transition('l3', 0, arrangement[11])
+        counting_probability = counting_probability * transition('l4', 0, arrangement[12])
+        counting_probability = counting_probability * transition('f', 0, arrangement[13])
+        counting_probability = counting_probability * transition('r56', 0, arrangement[14])
+        counting_probability = counting_probability * transition('r78', 0, arrangement[15])
+
+        final_order = str(states['r1'][0][0]) + str(states['r2'][0][0]) + str(states['r3'][0][0]) + str(states['r4'][0][0]) + str(states['r5'][0][0]) + str(states['r6'][0][0]) + str(states['r7'][0][0]) + str(states['r8'][0][0])
+
+        if final_order in probabilities:
+            probabilities[final_order] += counting_probability
         else:
-            bin_w1.append(1)
-        
-        transition('w1', 0, bin_w1[0])
-        transition('w1', 1, bin_w1[1])
-        transition('w1', 2, bin_w1[2])
-        transition('w1', 3, bin_w1[3])
+            probabilities[final_order] = counting_probability
 
-        for w2_l1_index in range(16):
-            bin_w2_l1 = []
+simulate_brackets()
 
-            transition('w2', 0, bin_w2_l1[0])
-            transition('w2', 1, bin_w2_l1[1])
-            transition('l1', 0, bin_w2_l1[0])
-            transition('l1', 1, bin_w2_l1[1])
-
-            for l2_index in range(4):
-                bin_l2 = []
-
-                transition('l2', 0, bin_l2[0])
-                transition('l2', 1, bin_l2[1])
-
-                for w3_l3_index in range(4):
-                    bin_w3_l3 = []
-
-                    transition('w3', 0, bin_w3_l3[0])
-                    transition('l3', 0, bin_w3_l3[1])
-
-                    for l4_index in range(2):
-                        bin_l4 = []
-
-                        transition('l4', 0, bin_l4[0])
-
-                        for f_index in range(2):
-                            bin_f = []
-
-                            transition('f', 0, bin_l4[0])
-
-                            for r56_index in range(2):
-                                bin_r56 = []
-
-                                transition('r56', 0, bin_r56[0])
-
-                                for r78_index in range(2):
-                                    bin_r78 = []
-
-                                    transition('r78', 0, bin_r78[0])
-
-                                    order = [states['r1'][0], states['r2'][0], states['r3'][0], states['r4'][0], states['r5'][0], states['r6'][0], states['r7'][0], states['r8'][0]]
-
-                                    if order not in orders:
-                                        orders.append(order)
-
-    states = default_states
-        
-
-
-transition('w1', 0, 0)
-transition('w1', 1, 1)
-transition('w1', 2, 0)
-transition('w1', 3, 0)
-transition('w2', 0, 0)
-transition('w2', 1, 1)
-transition('w3', 0, 0)
-transition('l1', 0, 0)
-transition('l1', 1, 0)
-transition('l2', 0, 1)
-transition('l2', 1, 1)
-transition('l3', 0, 0)
-transition('l4', 0, 0)
-transition('f', 0, 1)
-transition('r56', 0, 1)
-transition('r78', 0, 0)
-print(bin(7))
+print(probabilities['12345678'])
