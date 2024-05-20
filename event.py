@@ -14,14 +14,16 @@ class event:
         
         # get event data from API and convert from json
         self.get_event_matches = requests.get(f'https://www.thebluealliance.com/api/v3/event/{self.event_code}/matches', params = auth_TBA).json()
+        self.get_alliances = requests.get(f'https://www.thebluealliance.com/api/v3/event/{self.event_code}/alliances', params = auth_TBA).json()
         
         self.alliances = []
         self.playoff_matches = []
         self.event_score = 0
 
         # initializing alliances and bracket type
+        event_year = int(self.event_code[:4])
         for alliance_num in range(8):
-            if int(self.event_code.strip(string.ascii_letters)) < 2023:
+            if event_year < 2023:
                 self.alliances.append(alliance(event_code, alliance_num + 1, 'old'))
             else:
                 self.alliances.append(alliance(event_code, alliance_num + 1, 'new'))
@@ -116,20 +118,52 @@ class event:
             if match['comp_level'] != 'qm' and match['actual_time'] != None:
                 playoff_matches.append(match)
 
-        rankings = '00000000'
+        rankings = [0 for _ in range(8)]
         r78 = []
         r56 = []
 
         # ok wait just use ['status']['double-elim-round'] to sort. its the easiest.
-        for alliance in self.alliances:
+        for alliance in self.get_alliances:
             if alliance['status']['status'] == 'won':
                 rankings[0] = int(alliance['name'][9])
-            elif alliance['status']['level'] == 'f':
+            elif alliance['status']['double_elim_round'] == 'Finals':
                 rankings[1] = int(alliance['name'][9])
-            elif alliance['status']['record']['wins'] == 0:
-                r78.append(int(alliance['name'][9]))
-            elif alliance['status']['record']['wins'] == 1:
+            elif alliance['status']['double_elim_round'] == 'Round 5':
+                rankings[2] = int(alliance['name'][9])
+            elif alliance['status']['double_elim_round'] == 'Round 4':
+                rankings[3] = int(alliance['name'][9])
+            elif alliance['status']['double_elim_round'] == 'Round 3':
                 r56.append(int(alliance['name'][9]))
+            elif alliance['status']['double_elim_round'] == 'Round 2':
+                r78.append(int(alliance['name'][9]))
+
+        r56_scores = []
+
+        for alliance in r56:
+            r56_scores.append(self.alliances[alliance - 1].calculate_average_playoff_score())
+
+        if r56_scores[0] > r56_scores[1]:
+            rankings[4] = r56[0]
+            rankings[5] = r56[1]
+        else:
+            rankings[4] = r56[1]
+            rankings[5] = r56[0]
+
+        r78_scores = []
+
+        for alliance in r78:
+            r78_scores.append(self.alliances[alliance - 1].calculate_average_playoff_score())
+
+        if r78_scores[0] > r78_scores[1]:
+            rankings[6] = r78[0]
+            rankings[7] = r78[1]
+        else:
+            rankings[6] = r78[1]
+            rankings[7] = r78[0]
+
+        string_rankings = ''.join(str(rankings[i]) for i in range(8))
+
+        print(string_rankings)
 
         for arrangement in iterate.product(range(2), repeat = 16):
 
@@ -206,11 +240,20 @@ class event:
         for key in probabilities:
             data_list.append(probabilities[key])
 
-        plot.hist(data_list, bins = 3840)
-        plot.show()
+        data_check = probabilities[string_rankings]
+        cumulative_sum = 0
+
+        for value in data_list:
+            if value < data_check:
+                cumulative_sum += value
+
+
+        # plot.hist(data_list, bins = 3840)
+        # plot.show()
+
+        return cumulative_sum
+
 
         # get what actually happened and calculate the probability of it
 
         # the order is based on how we do the order above. actually we should move this to the top when we are done
-
-        
