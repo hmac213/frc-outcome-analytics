@@ -21,6 +21,9 @@ class alliance:
         self.init_teams()
         self.matches = []
         self.match_colors = []
+        self.team_event = [0, 0, 0]
+        for pick_num in range(3):
+            self.team_event[pick_num] = sb.get_team_event(self.teams[pick_num], event = self.event_code, fields = ['epa_pre_playoffs'])['epa_pre_playoffs']
 
     # initialize teams to the alliance
     def init_teams(self):
@@ -36,20 +39,18 @@ class alliance:
         num_qual_matches = sb.get_team_event(self.teams[0], event = self.event_code, fields = ['qual_count'])['qual_count']
 
         for pick_num in range(3):
-            alliance_points_mean += sb.get_team_event(self.teams[pick_num], event = self.event_code, fields = ['epa_pre_playoffs'])['epa_pre_playoffs']
+            alliance_points_mean += self.team_event[pick_num]
         
         for i in range(3):
             team_average_qual_score = 0
             qual_match_scores = []
             # should speed up code by not calling API for every team. Should rather create a match list beforehand and assign to teams based on being in the match.
-            qual_matches = requests.get(f'https://www.thebluealliance.com/api/v3/team/frc{self.teams[i]}/event/{self.event_code}/matches/simple', params = auth_TBA).json()
             
-            updated_qual_matches = []
-            for match in qual_matches:
-                if match['comp_level'] == 'qm':
-                    updated_qual_matches.append(match)
-
-            qual_matches = updated_qual_matches
+            # create qual matches
+            qual_matches = []
+            for match in self.get_event_matches:
+                if match['comp_level'] == 'qm' and ('frc' + str(self.teams[i]) in match['alliances']['blue']['team_keys'] or 'frc' + str(self.teams[i]) in match['alliances']['red']['team_keys']):
+                    qual_matches.append(match)
 
             for match in qual_matches:
                 if 'frc' + str(self.teams[i]) in match['alliances']['red']['team_keys']:
@@ -59,7 +60,7 @@ class alliance:
                     team_average_qual_score += (match['alliances']['blue']['score'] / num_qual_matches)
                     qual_match_scores.append(match['alliances']['blue']['score'])
 
-            percent_contribution = sb.get_team_event(self.teams[i], event = self.event_code, fields = ['epa_pre_playoffs'])['epa_pre_playoffs'] / team_average_qual_score
+            percent_contribution = self.team_event[i] / team_average_qual_score
 
             team_variance = 0
 
@@ -103,15 +104,16 @@ class alliance:
             print('match sorted for alliance ' + str(self.seed_num) + ': ' + match['key'])
 
     def calculate_average_playoff_score(self):
-        playoff_matches = requests.get(f'https://www.thebluealliance.com/api/v3/team/frc{self.teams[0]}/event/{self.event_code}/matches/simple', params = auth_TBA).json()
         average_playoff_score = 0
 
-        updated_playoff_matches = []
-        for match in playoff_matches:
-            if match['comp_level'] != 'qm' and match['alliances']['red']['score'] != -1:
-                updated_playoff_matches.append(match)
+        playoff_matches = []
 
-        playoff_matches = updated_playoff_matches
+        for match in self.get_event_matches:
+            if match['comp_level'] != 'qm' and match['alliances']['red']['score'] != -1:
+                if 'frc' + str(self.teams[0]) in match['alliances']['red']['team_keys']:
+                    playoff_matches.append(match)
+                elif 'frc' + str(self.teams[0]) in match['alliances']['blue']['team_keys']:
+                    playoff_matches.append(match)
 
         num_playoff_matches = len(playoff_matches)
 

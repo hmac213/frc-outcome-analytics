@@ -1,7 +1,7 @@
 import requests
 import string
 import matplotlib.pyplot as plot
-import itertools
+import itertools as iterate
 from probability import calculate_match_probability
 from alliance import alliance
 
@@ -25,62 +25,6 @@ class event:
                 self.alliances.append(alliance(event_code, alliance_num + 1, 'old'))
             else:
                 self.alliances.append(alliance(event_code, alliance_num + 1, 'new'))
-        
-        # initializing matches for all alliances
-        def calculate_rankings(self):
-            alliance_rankings = [8]
-            alliances_tied_eighth = []
-            alliances_tied_sixth = []
-            for alliance in self.alliances:
-                get_alliance_matches = requests.get(f'https://www.thebluealliance.com/api/v3/team/frc{alliance.teams[0]}/event/{self.event_code}/matches', params = auth_TBA).json()
-                sorted_alliance_matches = []
-
-                for match in get_alliance_matches:
-                    if match['comp_level'] == 'qm':
-                        get_alliance_matches.remove(match)
-
-                if alliance['status']['status'] == 'won':
-                    alliance_rankings[0] = self.alliances.get(alliance)
-                elif alliance['status']['comp_level'] == 'f':
-                    alliance_rankings[1] = self.alliances.get(alliance)
-                elif alliance['status']['record']['wins'] == 1:
-                    alliances_tied_sixth.append(alliance)
-                elif alliance['status']['record']['wins'] == 0:
-                    alliances_tied_eighth.append(alliance)
-                # need to handle third and fourth places
-
-                # determining fifth and sixth
-                if alliances_tied_sixth[0].calculate_average_playoff_score() > alliances_tied_sixth[1].calculate_average_playoff_score():
-                    alliance_rankings[4] = alliances_tied_sixth[0]
-                    alliance_rankings[5] = alliances_tied_sixth[1]
-                else:
-                    alliance_rankings[4] = alliances_tied_sixth[1]
-                    alliance_rankings[5] = alliances_tied_sixth[0]
-
-                # determining seventh and eighth
-                if alliances_tied_eighth[0].calculate_average_playoff_score() > alliances_tied_eighth[1].calculate_average_playoff_score():
-                    alliance_rankings[6] = alliances_tied_eighth[0]
-                    alliance_rankings[7] = alliances_tied_eighth[1]
-                else:
-                    alliance_rankings[6] = alliances_tied_eighth[1]
-                    alliance_rankings[7] = alliances_tied_eighth[0]
-
-    # define function to calculate final event rankings.
-    def calculate_event_score(self):
-        for alliance in self.alliances:
-            self.event_score += abs(alliance.seed_num - alliance.final_ranking)
-
-    # creating distribution of scores
-    # need to make it so that the '0' distribution is more common, reflecting real life
-    def draw_distribution(self):
-        plot_data = []
-        for arrangement in list(itertools.permutations(list(range(1,9)), 8)):
-            arrangement_sum = 0
-            for number in range(len(arrangement)):
-                arrangement_sum += (1 / arrangement[number]) * abs(arrangement[number] - (number + 1))
-            plot_data.append(arrangement_sum)
-        plot.hist(plot_data, bins = 256)
-        plot.show()
 
     def create_match_probability_distribution(self):
         # row is for alliance, col is against alliance
@@ -90,10 +34,183 @@ class event:
                 probability_map[i][j + i + 1] = calculate_match_probability(self.alliances[i], self.alliances[i + j + 1])
                 probability_map[j + i + 1][i] = 1 - probability_map[i][j + i + 1]
 
-        return probability_map
+        print('probability map done')
+        self.probability_map = probability_map
                 
-    def create_place_probability_distribution(self):
+    def transition(self, state, substate, winning_index, current_state):
+        distribution = self.probability_map
+
+        transition_map = {
+            'w1' : ['w2', 'l1'],
+            'w2' : ['w3', 'l2'],
+            'w3' : ['f', 'l4'],
+            'l1' : ['l2', 'r78'],
+            'l2' : ['l3', 'r56'],
+            'l3' : ['l4', 'r4'],
+            'l4' : ['f', 'r3'],
+            'f' : ['r1', 'r2'],
+            'r56' : ['r5', 'r6'],
+            'r78' : ['r7', 'r8']
+        }
+
+        if state == 'w1':
+            if substate == 0 or substate == 1:
+                if winning_index == 0:
+                    current_state[transition_map[state][0]][0].append(current_state[state][substate][0])
+                    current_state[transition_map[state][1]][0].append(current_state[state][substate][1])
+                elif winning_index == 1:
+                    current_state[transition_map[state][1]][0].append(current_state[state][substate][0])
+                    current_state[transition_map[state][0]][0].append(current_state[state][substate][1])
+            elif substate == 2 or substate == 3:
+                if winning_index == 0:
+                    current_state[transition_map[state][0]][1].append(current_state[state][substate][0])
+                    current_state[transition_map[state][1]][1].append(current_state[state][substate][1])
+                elif winning_index == 1:
+                    current_state[transition_map[state][1]][1].append(current_state[state][substate][0])
+                    current_state[transition_map[state][0]][1].append(current_state[state][substate][1])
+        elif state == 'l1':
+            if winning_index == 0:
+                current_state[transition_map[state][0]][substate].append(current_state[state][substate][0])
+                current_state[transition_map[state][1]][0].append(current_state[state][substate][1])
+            elif winning_index == 1:
+                current_state[transition_map[state][1]][0].append(current_state[state][substate][0])
+                current_state[transition_map[state][0]][substate].append(current_state[state][substate][1])
+        elif state == 'w2':
+            if substate == 0:
+                substate_opp = 1
+            elif substate == 1:
+                substate_opp = 0
+            if winning_index == 0:
+                current_state[transition_map[state][0]][0].append(current_state[state][substate][0])
+                current_state[transition_map[state][1]][substate_opp].append(current_state[state][substate][1])
+            elif winning_index == 1:
+                current_state[transition_map[state][1]][substate_opp].append(current_state[state][substate][0])
+                current_state[transition_map[state][0]][0].append(current_state[state][substate][1])
+        else:
+            if winning_index == 0:
+                current_state[transition_map[state][0]][0].append(current_state[state][substate][0])
+                current_state[transition_map[state][1]][0].append(current_state[state][substate][1])
+            elif winning_index == 1:
+                current_state[transition_map[state][0]][0].append(current_state[state][substate][1])
+                current_state[transition_map[state][1]][0].append(current_state[state][substate][0])
+
+        for i in range(len(current_state[transition_map[state][0]])):
+            if len(current_state[transition_map[state][0]][i]) == 2:
+                current_state[transition_map[state][0]][i].sort()
+
+        for i in range(len(current_state[transition_map[state][1]])):
+            if len(current_state[transition_map[state][1]][i]) == 2:
+                current_state[transition_map[state][1]][i].sort()
+
+        if winning_index == 0:
+            return distribution[current_state[state][substate][0] - 1][current_state[state][substate][1] - 1]
+        else:
+            return distribution[current_state[state][substate][1] - 1][current_state[state][substate][0] - 1]
+    
+    def simulate_brackets(self):
+
+        probabilities = {}
+
+        playoff_matches = []
+        for match in self.get_event_matches:
+            if match['comp_level'] != 'qm' and match['actual_time'] != None:
+                playoff_matches.append(match)
+
+        rankings = '00000000'
+        r78 = []
+        r56 = []
+
+        # ok wait just use ['status']['double-elim-round'] to sort. its the easiest.
         for alliance in self.alliances:
-            average_playoff_score = alliance.calculate_average_playoff_score()
-        
+            if alliance['status']['status'] == 'won':
+                rankings[0] = int(alliance['name'][9])
+            elif alliance['status']['level'] == 'f':
+                rankings[1] = int(alliance['name'][9])
+            elif alliance['status']['record']['wins'] == 0:
+                r78.append(int(alliance['name'][9]))
+            elif alliance['status']['record']['wins'] == 1:
+                r56.append(int(alliance['name'][9]))
+
+        for arrangement in iterate.product(range(2), repeat = 16):
+
+            default_states = {
+                'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
+                'w2' : [[], []],
+                'w3' : [[]],
+                'l1' : [[], []],
+                'l2' : [[], []],
+                'l3' : [[]],
+                'l4' : [[]],
+                'f' : [[]],
+                'r1' : [[]],
+                'r2' : [[]],
+                'r3' : [[]],
+                'r4' : [[]],
+                'r5' : [[]],
+                'r6' : [[]],
+                'r7' : [[]],
+                'r8' : [[]],
+                'r56' : [[]],
+                'r78' : [[]]
+            }
+
+            states = {
+                'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
+                'w2' : [[], []],
+                'w3' : [[]],
+                'l1' : [[], []],
+                'l2' : [[], []],
+                'l3' : [[]],
+                'l4' : [[]],
+                'f' : [[]],
+                'r1' : [[]],
+                'r2' : [[]],
+                'r3' : [[]],
+                'r4' : [[]],
+                'r5' : [[]],
+                'r6' : [[]],
+                'r7' : [[]],
+                'r8' : [[]],
+                'r56' : [[]],
+                'r78' : [[]]
+            }
+
+            counting_probability = 1
+            counting_probability = counting_probability * self.transition('w1', 0, arrangement[0], states)
+            counting_probability = counting_probability * self.transition('w1', 1, arrangement[1], states)
+            counting_probability = counting_probability * self.transition('w1', 2, arrangement[2], states)
+            counting_probability = counting_probability * self.transition('w1', 3, arrangement[3], states)
+            counting_probability = counting_probability * self.transition('w2', 0, arrangement[4], states)
+            counting_probability = counting_probability * self.transition('w2', 1, arrangement[5], states)
+            counting_probability = counting_probability * self.transition('w3', 0, arrangement[6], states)
+            counting_probability = counting_probability * self.transition('l1', 0, arrangement[7], states)
+            counting_probability = counting_probability * self.transition('l1', 1, arrangement[8], states)
+            counting_probability = counting_probability * self.transition('l2', 0, arrangement[9], states)
+            counting_probability = counting_probability * self.transition('l2', 1, arrangement[10], states)
+            counting_probability = counting_probability * self.transition('l3', 0, arrangement[11], states)
+            counting_probability = counting_probability * self.transition('l4', 0, arrangement[12], states)
+            counting_probability = counting_probability * self.transition('f', 0, arrangement[13], states)
+            counting_probability = counting_probability * self.transition('r56', 0, arrangement[14], states)
+            counting_probability = counting_probability * self.transition('r78', 0, arrangement[15], states)
+
+            final_order = str(states['r1'][0][0]) + str(states['r2'][0][0]) + str(states['r3'][0][0]) + str(states['r4'][0][0]) + str(states['r5'][0][0]) + str(states['r6'][0][0]) + str(states['r7'][0][0]) + str(states['r8'][0][0])
+
+            if final_order in probabilities:
+                probabilities[final_order] += counting_probability
+            else:
+                probabilities[final_order] = counting_probability
+
+            states = default_states
+
+        data_list = []
+        for key in probabilities:
+            data_list.append(probabilities[key])
+
+        plot.hist(data_list, bins = 3840)
+        plot.show()
+
+        # get what actually happened and calculate the probability of it
+
+        # the order is based on how we do the order above. actually we should move this to the top when we are done
+
         

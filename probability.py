@@ -18,7 +18,7 @@ def calculate_match_probability(red_alliance: alliance, blue_alliance: alliance)
     red_wins = 0
     blue_wins = 0
 
-    for i in range(1000):
+    for _ in range(1000):
         red_score = red_average + red_standard_deviation * np.random.standard_t(num_qual_matches - 1)
         blue_score = blue_average + blue_standard_deviation * np.random.standard_t(num_qual_matches - 1)
         if red_score > blue_score:
@@ -26,6 +26,5 @@ def calculate_match_probability(red_alliance: alliance, blue_alliance: alliance)
         else:
             blue_wins += 1
 
-
+    print('created a match probability')
     return red_wins / (red_wins + blue_wins)
-

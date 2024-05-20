@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plot
 from event import event
 import itertools as iterate
+from decimal import Decimal, getcontext
+
+getcontext().prec = 50
 
 # Paths to 8 seed:
 # W1 -> L1 -> 8
@@ -30,36 +33,12 @@ import itertools as iterate
 # W1 -> W2 -> L2 -> L3 -> L4 -> F win
 # W1 -> L1 -> L2 -> L3 -> L4 -> F win
 
-distribution = [[0, 0.547, 0.974, 0.99, 0.981, 1.0, 0.992, 0.994], [0.45299999999999996, 0, 0.964, 0.971, 0.975, 1.0, 0.988, 0.99], [0.026000000000000023, 0.03600000000000003, 0, 0.569, 0.632, 0.891, 0.779, 0.848], [0.010000000000000009, 0.029000000000000026, 0.43100000000000005, 0, 0.54, 0.852, 0.681, 0.808], [0.019000000000000017, 0.025000000000000022, 0.368, 0.45999999999999996, 0, 0.808, 0.66, 0.72], [0.0, 0.0, 0.10899999999999999, 0.14800000000000002, 0.19199999999999995, 0, 0.298, 0.442], [0.008000000000000007, 0.01200000000000001, 0.22099999999999997, 0.31899999999999995, 0.33999999999999997, 0.702, 0, 0.631], [0.006000000000000005, 0.010000000000000009, 0.15200000000000002, 0.19199999999999995, 0.28, 0.558, 0.369, 0]]
+distribution = [[0, 0.547, 0.974, 0.99, 0.981, 0.997, 0.992, 0.994], [0.45299999999999996, 0, 0.964, 0.971, 0.975, 0.996, 0.988, 0.99], [0.026000000000000023, 0.03600000000000003, 0, 0.569, 0.632, 0.891, 0.779, 0.848], [0.010000000000000009, 0.029000000000000026, 0.43100000000000005, 0, 0.54, 0.852, 0.681, 0.808], [0.019000000000000017, 0.025000000000000022, 0.368, 0.45999999999999996, 0, 0.808, 0.66, 0.72], [0.003, 0.004, 0.10899999999999999, 0.14800000000000002, 0.19199999999999995, 0, 0.298, 0.442], [0.008000000000000007, 0.01200000000000001, 0.22099999999999997, 0.31899999999999995, 0.33999999999999997, 0.702, 0, 0.631], [0.006000000000000005, 0.010000000000000009, 0.15200000000000002, 0.19199999999999995, 0.28, 0.558, 0.369, 0]]
 
 # Code to simulate bracket
 
-probabilities = []
-teams = [1, 2, 3, 4, 5, 6, 7, 8]
-
 default_states = {
     'w1' : [[1, 8], [3, 5], [2, 7], [3, 6]],
-    'w2' : [[], []],
-    'w3' : [[]],
-    'l1' : [[], []],
-    'l2' : [[], []],
-    'l3' : [[]],
-    'l4' : [[]],
-    'f' : [[]],
-    'r1' : [[]],
-    'r2' : [[]],
-    'r3' : [[]],
-    'r4' : [[]],
-    'r5' : [[]],
-    'r6' : [[]],
-    'r7' : [[]],
-    'r8' : [[]],
-    'r56' : [[]],
-    'r78' : [[]]
-}
-
-states = {
-    'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
     'w2' : [[], []],
     'w3' : [[]],
     'l1' : [[], []],
@@ -99,60 +78,60 @@ transition_map = {
 
 # the 'state' parameter must be of the form states[state][substate], to create universal syntax
 # path is either 1 or 2. From path 1, you can access certain matches and from path 2 you can access certain matches
-def transition(state, substate, winning_index):
+def transition(state, substate, winning_index, current_state):
     if state == 'w1':
         if substate == 0 or substate == 1:
             if winning_index == 0:
-                states[transition_map[state][0]][0].append(states[state][substate][0])
-                states[transition_map[state][1]][0].append(states[state][substate][1])
+                current_state[transition_map[state][0]][0].append(current_state[state][substate][0])
+                current_state[transition_map[state][1]][0].append(current_state[state][substate][1])
             elif winning_index == 1:
-                states[transition_map[state][1]][0].append(states[state][substate][0])
-                states[transition_map[state][0]][0].append(states[state][substate][1])
+                current_state[transition_map[state][1]][0].append(current_state[state][substate][0])
+                current_state[transition_map[state][0]][0].append(current_state[state][substate][1])
         elif substate == 2 or substate == 3:
             if winning_index == 0:
-                states[transition_map[state][0]][1].append(states[state][substate][0])
-                states[transition_map[state][1]][1].append(states[state][substate][1])
+                current_state[transition_map[state][0]][1].append(current_state[state][substate][0])
+                current_state[transition_map[state][1]][1].append(current_state[state][substate][1])
             elif winning_index == 1:
-                states[transition_map[state][1]][1].append(states[state][substate][0])
-                states[transition_map[state][0]][1].append(states[state][substate][1])
+                current_state[transition_map[state][1]][1].append(current_state[state][substate][0])
+                current_state[transition_map[state][0]][1].append(current_state[state][substate][1])
     elif state == 'l1':
         if winning_index == 0:
-            states[transition_map[state][0]][substate].append(states[state][substate][0])
-            states[transition_map[state][1]][0].append(states[state][substate][1])
+            current_state[transition_map[state][0]][substate].append(current_state[state][substate][0])
+            current_state[transition_map[state][1]][0].append(current_state[state][substate][1])
         elif winning_index == 1:
-            states[transition_map[state][1]][0].append(states[state][substate][0])
-            states[transition_map[state][0]][substate].append(states[state][substate][1])
+            current_state[transition_map[state][1]][0].append(current_state[state][substate][0])
+            current_state[transition_map[state][0]][substate].append(current_state[state][substate][1])
     elif state == 'w2':
         if substate == 0:
             substate_opp = 1
         elif substate == 1:
             substate_opp = 0
         if winning_index == 0:
-            states[transition_map[state][0]][0].append(states[state][substate][0])
-            states[transition_map[state][1]][substate_opp].append(states[state][substate][1])
+            current_state[transition_map[state][0]][0].append(current_state[state][substate][0])
+            current_state[transition_map[state][1]][substate_opp].append(current_state[state][substate][1])
         elif winning_index == 1:
-            states[transition_map[state][1]][substate_opp].append(states[state][substate][0])
-            states[transition_map[state][0]][0].append(states[state][substate][1])
+            current_state[transition_map[state][1]][substate_opp].append(current_state[state][substate][0])
+            current_state[transition_map[state][0]][0].append(current_state[state][substate][1])
     else:
         if winning_index == 0:
-            states[transition_map[state][0]][0].append(states[state][substate][0])
-            states[transition_map[state][1]][0].append(states[state][substate][1])
+            current_state[transition_map[state][0]][0].append(current_state[state][substate][0])
+            current_state[transition_map[state][1]][0].append(current_state[state][substate][1])
         elif winning_index == 1:
-            states[transition_map[state][0]][0].append(states[state][substate][1])
-            states[transition_map[state][1]][0].append(states[state][substate][0])
+            current_state[transition_map[state][0]][0].append(current_state[state][substate][1])
+            current_state[transition_map[state][1]][0].append(current_state[state][substate][0])
 
-    for i in range(len(states[transition_map[state][0]])):
-        if len(states[transition_map[state][0]][i]) == 2:
-            states[transition_map[state][0]][i].sort()
+    for i in range(len(current_state[transition_map[state][0]])):
+        if len(current_state[transition_map[state][0]][i]) == 2:
+            current_state[transition_map[state][0]][i].sort()
 
-    for i in range(len(states[transition_map[state][1]])):
-        if len(states[transition_map[state][1]][i]) == 2:
-            states[transition_map[state][1]][i].sort()
+    for i in range(len(current_state[transition_map[state][1]])):
+        if len(current_state[transition_map[state][1]][i]) == 2:
+            current_state[transition_map[state][1]][i].sort()
 
     if winning_index == 0:
-        return distribution[states[state][substate][0] - 1][states[state][substate][1] - 1]
+        return distribution[current_state[state][substate][0] - 1][current_state[state][substate][1] - 1]
     else:
-        return distribution[states[state][substate][1] - 1][states[state][substate][0] - 1]
+        return distribution[current_state[state][substate][1] - 1][current_state[state][substate][0] - 1]
 
 # make sure the indices of these two following lists always align.
 
@@ -164,25 +143,45 @@ def simulate_brackets():
     # if number is 1, then red wins, if number is 0 then blue wins
 
     for arrangement in iterate.product(range(2), repeat = 16):
-        states = default_states
+
+        states = {
+            'w1' : [[1, 8], [4, 5], [2, 7], [3, 6]],
+            'w2' : [[], []],
+            'w3' : [[]],
+            'l1' : [[], []],
+            'l2' : [[], []],
+            'l3' : [[]],
+            'l4' : [[]],
+            'f' : [[]],
+            'r1' : [[]],
+            'r2' : [[]],
+            'r3' : [[]],
+            'r4' : [[]],
+            'r5' : [[]],
+            'r6' : [[]],
+            'r7' : [[]],
+            'r8' : [[]],
+            'r56' : [[]],
+            'r78' : [[]]
+        }
 
         counting_probability = 1
-        counting_probability = counting_probability * transition('w1', 0, arrangement[0])
-        counting_probability = counting_probability * transition('w1', 1, arrangement[1])
-        counting_probability = counting_probability * transition('w1', 2, arrangement[2])
-        counting_probability = counting_probability * transition('w1', 3, arrangement[3])
-        counting_probability = counting_probability * transition('w2', 0, arrangement[4])
-        counting_probability = counting_probability * transition('w2', 1, arrangement[5])
-        counting_probability = counting_probability * transition('w3', 0, arrangement[6])
-        counting_probability = counting_probability * transition('l1', 0, arrangement[7])
-        counting_probability = counting_probability * transition('l1', 1, arrangement[8])
-        counting_probability = counting_probability * transition('l2', 0, arrangement[9])
-        counting_probability = counting_probability * transition('l2', 1, arrangement[10])
-        counting_probability = counting_probability * transition('l3', 0, arrangement[11])
-        counting_probability = counting_probability * transition('l4', 0, arrangement[12])
-        counting_probability = counting_probability * transition('f', 0, arrangement[13])
-        counting_probability = counting_probability * transition('r56', 0, arrangement[14])
-        counting_probability = counting_probability * transition('r78', 0, arrangement[15])
+        counting_probability = counting_probability * transition('w1', 0, arrangement[0], states)
+        counting_probability = counting_probability * transition('w1', 1, arrangement[1], states)
+        counting_probability = counting_probability * transition('w1', 2, arrangement[2], states)
+        counting_probability = counting_probability * transition('w1', 3, arrangement[3], states)
+        counting_probability = counting_probability * transition('w2', 0, arrangement[4], states)
+        counting_probability = counting_probability * transition('w2', 1, arrangement[5], states)
+        counting_probability = counting_probability * transition('w3', 0, arrangement[6], states)
+        counting_probability = counting_probability * transition('l1', 0, arrangement[7], states)
+        counting_probability = counting_probability * transition('l1', 1, arrangement[8], states)
+        counting_probability = counting_probability * transition('l2', 0, arrangement[9], states)
+        counting_probability = counting_probability * transition('l2', 1, arrangement[10], states)
+        counting_probability = counting_probability * transition('l3', 0, arrangement[11], states)
+        counting_probability = counting_probability * transition('l4', 0, arrangement[12], states)
+        counting_probability = counting_probability * transition('f', 0, arrangement[13], states)
+        counting_probability = counting_probability * transition('r56', 0, arrangement[14], states)
+        counting_probability = counting_probability * transition('r78', 0, arrangement[15], states)
 
         final_order = str(states['r1'][0][0]) + str(states['r2'][0][0]) + str(states['r3'][0][0]) + str(states['r4'][0][0]) + str(states['r5'][0][0]) + str(states['r6'][0][0]) + str(states['r7'][0][0]) + str(states['r8'][0][0])
 
@@ -191,6 +190,19 @@ def simulate_brackets():
         else:
             probabilities[final_order] = counting_probability
 
-simulate_brackets()
+        states = default_states
 
-print(probabilities['12345678'])
+def create_plot():
+    data_list = []
+    for probability in probabilities:
+        data_list.append(probabilities[probability])
+    
+    plot.hist(data_list, bins = 1920)
+    plot.show()
+
+simulate_brackets()
+create_plot()
+
+
+print(max(probabilities, key = probabilities.get))
+print(probabilities['12453786'])
