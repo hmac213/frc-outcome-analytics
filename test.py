@@ -23,4 +23,4 @@ match_list = updated_match_list
 # print(sb.get_team_event(1160, '2024cabe', fields = ['epa_pre_playoffs'])['epa_pre_playoffs'])
 # print(np.random.standard_t(9))
 # print([[0] * 8 for i in range(8)])
-print(sb.get_team_event('2024cada'))
+print(sb.get_events(2024))
